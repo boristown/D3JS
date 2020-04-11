@@ -1,0 +1,9 @@
+﻿<!DOCTYPE html>
+<meta charset="utf-8">
+<div id="observablehq-8c1b0641"></div>
+<script type="module">
+    import { Runtime, Inspector } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
+    import define from "https://api.observablehq.com/@d3/bar-chart-race.js?v=3";
+    const inspect = Inspector.into("#observablehq-8c1b0641");
+    (new Runtime).module(define, name => (name === "chart") && inspect());
+</script>
