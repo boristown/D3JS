@@ -7,26 +7,58 @@ function flatten(t, e) {
 	}
 	return n.join(" ")
 }
-function parseText(t) {
+
+function parseText(longtext) {
 	tags = {};
 	var e = {},
 		n = d3.select("#per-line").property("checked");
-	t.split(n ? /\n/g : wordSeparators).forEach(function(t) {
+	longtext.split(n ? /\n/g : wordSeparators).forEach(function (t) {
 		discard.test(t) || (n || (t = t.replace(punctuation, "")), stopWords.test(t.toLowerCase()) || (t = t.substr(0, maxLength), e[t.toLowerCase()] = t, tags[t = t.toLowerCase()] = (tags[t] || 0) + 1))
-	}), tags = d3.entries(tags).sort(function(t, e) {
+	});
+	tags = d3.entries(tags).sort(function (t, e) {
 		return e.value - t.value
-	}), tags.forEach(function(t) {
+	});
+	tags.forEach(function (t) {
 		t.key = e[t.key]
-	}), generate()
+	});
+	generate();
 }
+
+function parseTextDict() {
+	tags = {};
+	//var e = {},
+	//	n = d3.select("#per-line").property("checked");
+	//longtext.split(n ? /\n/g : wordSeparators).forEach(function (t) {
+	//	discard.test(t) || (n || (t = t.replace(punctuation, "")), stopWords.test(t.toLowerCase()) || (t = t.substr(0, maxLength), e[t.toLowerCase()] = t, tags[t = t.toLowerCase()] = (tags[t] || 0) + 1))
+	//});
+	//tags = d3.entries(tags).sort(function (t, e) {
+	//	return e.value - t.value
+	//});
+	//tags.forEach(function (t) {
+	//	t.key = e[t.key]
+	//});
+	tags = d3.json("./files/crypto.json", parseTextGenerate)
+}
+
+function parseTextGenerate(error, jsonData) {
+	tags = d3.entries(jsonData).sort(function (t, e) {
+		return e.value - t.value
+	});
+	generate();
+}
+
 function generate() {
-	layout.font(d3.select("#font").property("value")).spiral(d3.select("input[name=spiral]:checked").property("value")), fontSize = d3.scale[d3.select("input[name=scale]:checked").property("value")]().range([10, 100]), tags.length && fontSize.domain([+tags[tags.length - 1].value || 1, +tags[0].value]), complete = 0, statusText.style("display", null), words = [], layout.stop().words(tags.slice(0, max = Math.min(tags.length, +d3.select("#max").property("value")))).start()
+	layout.font(d3.select("#font").property("value")).spiral(d3.select("input[name=spiral]:checked").property("value"));
+	fontSize = d3.scale[d3.select("input[name=scale]:checked").property("value")]().range([10, 100]), tags.length && fontSize.domain([+tags[tags.length - 1].value || 1, +tags[0].value]), complete = 0, statusText.style("display", null), words = [], layout.stop().words(tags.slice(0, max = Math.min(tags.length, +d3.select("#max").property("value")))).start()
 }
+
 function progress(t) {
 	statusText.text(++complete + "/" + max)
 }
+
 function draw(t, e) {
-	statusText.style("display", "none"), scale = e ? Math.min(w / Math.abs(e[1].x - w / 2), w / Math.abs(e[0].x - w / 2), h / Math.abs(e[1].y - h / 2), h / Math.abs(e[0].y - h / 2)) / 2 : 1, words = t;
+	statusText.style("display", "none"), scale = e ? Math.min(w / Math.abs(e[1].x - w / 2), w / Math.abs(e[0].x - w / 2), h / Math.abs(e[1].y - h / 2), h / Math.abs(e[0].y - h / 2)) / 2 : 1;
+	words = t;
 	var n = vis.selectAll("text").data(words, function(t) {
 		return t.text.toLowerCase()
 	});
@@ -51,6 +83,7 @@ function draw(t, e) {
 		r.appendChild(this)
 	}), a.transition().duration(1e3).style("opacity", 1e-6).remove(), vis.transition().delay(1e3).duration(750).attr("transform", "translate(" + [w >> 1, h >> 1] + ")scale(" + scale + ")")
 }
+
 function downloadPNG() {
 	d3.event.preventDefault();
 	var t = document.createElement("canvas"),
@@ -72,7 +105,7 @@ function(t) {
 				x: size[0],
 				y: size[1]
 			}], n.x), i = n.y, d = Math.sqrt(size[0] * size[0] + size[1] * size[1]), h = spiral(size), f = Math.random() < .5 ? 1 : -1, p = -f;
-			(r = h(p += f)) && (o = ~~r[0], s = ~~r[1], !(Math.min(o, s) > d));) if (n.x = l + o, n.y = i + s, !(n.x + n.x0 < 0 || n.y + n.y0 < 0 || n.x + n.x1 > size[0] || n.y + n.y1 > size[1]) && (!a || !u(n, t, size[0])) && (!a || c(n, a))) {
+			(r = h(p += f)) && (o = ~~r[0], s = ~~r[1], !(Math.min(o, s) > d));) if (n.x = l + o, n.y = i + s, !(n.x + n.x0 < 0 || n.y + n.y0 < 0 || n.x + n.x1 > size[0] || n.y + n.y1 > size[1]) && (!a || !u(n, t, size[0])) && (!a || collideRects(n, a))) {
 				for (var y, g = n.sprite, v = n.width >> 5, x = size[0] >> 5, w = n.x - (v << 4), M = 127 & w, b = 32 - M, z = n.y1 - n.y0, k = (n.y + n.y0) * x + (w >> 5), T = 0; z > T; T++) {
 					y = 0;
 					for (var A = 0; v >= A; A++) t[k + A] |= y << b | (v > A ? (y = g[T * v + A]) >>> M : 0);
@@ -96,21 +129,24 @@ function(t) {
 			cloud = {};
 		return cloud.start = function() {
 			function n() {
-				for (var n, s = +new Date; + new Date - s < timeInterval && ++u < o && timer;) n = d[u], n.x = size[0] * (Math.random() + .5) >> 1, n.y = size[1] * (Math.random() + .5) >> 1, cloudSprite(n, d, u), t(a, n, r) && (c.push(n), event.word(n), r ? i(r, n) : r = [{
-					x: n.x + n.x0,
-					y: n.y + n.y0
+				for (var wordsingle, currenttime = +new Date; + new Date - currenttime < timeInterval && ++wordindex < wordlength && timer;)
+					wordsingle = wordsmap[wordindex], wordsingle.x = size[0] * (Math.random() + .5) >> 1, wordsingle.y = size[1] * (Math.random() + .5) >> 1, cloudSprite(wordsingle, wordsmap, wordindex), t(a, wordsingle, cloudbounds)
+						&& (wordlist.push(wordsingle), event.word(wordsingle),
+							cloudbounds ? cloudBounds(cloudbounds, wordsingle) : cloudbounds = [{
+					x: wordsingle.x + wordsingle.x0,
+					y: wordsingle.y + wordsingle.y0
 				}, {
-					x: n.x + n.x1,
-					y: n.y + n.y1
-				}], n.x -= size[0] >> 1, n.y -= size[1] >> 1);
-				u >= o && (cloud.stop(), event.end(c, r))
+					x: wordsingle.x + wordsingle.x1,
+					y: wordsingle.y + wordsingle.y1
+				}], wordsingle.x -= size[0] >> 1, wordsingle.y -= size[1] >> 1);
+				wordindex >= wordlength && (cloud.stop(), event.end(wordlist, cloudbounds))
 			}
 			var a = f((size[0] >> 5) * size[1]),
-				r = null,
-				o = words.length,
-				u = -1,
-				c = [],
-				d = words.map(function(t, e) {
+				cloudbounds = null,
+				wordlength = words.length,
+				wordindex = -1,
+				wordlist = [],
+				wordsmap = words.map(function(t, e) {
 					return {
 						text: text.call(this, t, e),
 						font: font.call(this, t, e),
@@ -209,14 +245,20 @@ function(t) {
 		}
 		return !1
 	}
-	function i(t, e) {
-		var n = t[0],
-			a = t[1];
-		e.x + e.x0 < n.x && (n.x = e.x + e.x0), e.y + e.y0 < n.y && (n.y = e.y + e.y0), e.x + e.x1 > a.x && (a.x = e.x + e.x1), e.y + e.y1 > a.y && (a.y = e.y + e.y1)
+
+	function cloudBounds(bounds, d) {
+		var b0 = bounds[0],
+			b1 = bounds[1];
+		if (d.x + d.x0 < b0.x) b0.x = d.x + d.x0;
+		if (d.y + d.y0 < b0.y) b0.y = d.y + d.y0;
+		if (d.x + d.x1 > b1.x) b1.x = d.x + d.x1;
+		if (d.y + d.y1 > b1.y) b1.y = d.y + d.y1;
 	}
-	function c(t, e) {
-		return t.x + t.x1 > e[0].x && t.x + t.x0 < e[1].x && t.y + t.y1 > e[0].y && t.y + t.y0 < e[1].y
+
+	function collideRects(a, b) {
+		return a.x + a.x1 > b[0].x && a.x + a.x0 < b[1].x && a.y + a.y1 > b[0].y && a.y + a.y0 < b[1].y;
 	}
+
 	function archimedeanSpiral(size) {
 		var e = size[0] / size[1];
 		return function (t) {
@@ -282,9 +324,13 @@ var unicodePunctuationRe = "!-#%-*,-/:;?@\\[-\\]_{}\xa1\xa7\xab\xb6\xb7\xbb\xbf\
 	background = svg.append("g"),
 	vis = svg.append("g").attr("transform", "translate(" + [w >> 1, h >> 1] + ")");
 d3.select("#download-svg").on("click", downloadSVG), d3.select("#download-png").on("click", downloadPNG);
-var form = d3.select("#form").on("submit", function() {
-	parseText(d3.select("#text").property("value")), d3.event.preventDefault()
+
+var form = d3.select("#form").on("submit", function () {
+	//parseText(d3.select("#text").property("value"));
+	parseTextDict();
+	d3.event.preventDefault();
 });
+
 form.selectAll("input[type=number]").on("click.refresh", function() {
 	this.value !== this.defaultValue && (generate(), this.defaultValue = this.value)
 }), form.selectAll("input[type=radio], #font").on("change", generate);
@@ -352,5 +398,5 @@ d3.select("#random-palette").on("click", function() {
 	var u, i, c, d = Math.PI / 180,
 		h = d3.scale.linear(),
 		f = d3.svg.arc().innerRadius(0).outerRadius(r);
-	d3.selectAll("#angle-count, #angle-from, #angle-to").on("change", t).on("mouseup", t), t(), parseText(d3.select("#text").property("value"))
+	d3.selectAll("#angle-count, #angle-from, #angle-to").on("change", t).on("mouseup", t), t(), parseTextDict(/*d3.select("#text").property("value")*/)
 }();
