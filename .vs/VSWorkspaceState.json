@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\cloud"
+    "\\cloud",
+    "\\cloud\\files"
   ],
-  "SelectedNode": "\\cloud\\index.html",
+  "SelectedNode": "\\cloud\\files\\cloud.js",
   "PreviewInSolutionExplorer": false
 }
